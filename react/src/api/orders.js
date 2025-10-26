@@ -1,26 +1,21 @@
 import instance from './axios';
 
-export const createOrder = async ({ delivery, payment }) => {
-  const res = await instance.post('/api/orders', { delivery, payment });
-  return res.data;
-};
+export async function createOrder(payload) {
+  const { data } = await instance.post('/api/orders', payload);
+  return data;
+}
 
-export const listOrders = async (params = {}) => {
-  const res = await instance.get('/api/orders', { params });
-  return res.data;
-};
+export async function listOrders(params = {}) {
+  const { data } = await instance.get('/api/orders', { params });
+  return data;
+}
 
-export const getOrder = async (id) => {
-  const res = await instance.get(`/api/orders/${id}`);
-  return res.data;
-};
+export async function getOrder(id) {
+  const { data } = await instance.get(`/api/orders/${id}`);
+  return data;
+}
 
-export const updateOrderStatus = async (id, { status }) => {
-  const res = await instance.patch(`/api/orders/${id}/status`, { status });
-  return res.data;
-};
-
-export const notifyOrder = async (id, { message }) => {
-  const res = await instance.post(`/api/orders/${id}/notify`, message ? { message } : {});
-  return res.data;
-};
+export async function updateOrderStatus(id, status) {
+  const { data } = await instance.patch(`/api/orders/${id}/status`, { status });
+  return data;
+}

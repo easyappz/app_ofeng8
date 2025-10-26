@@ -8,5 +8,6 @@ export const ROUTE_PATHS = [
   '/about',
   '/contacts',
   '/admin',
-  '*'
 ];
+
+export default ROUTE_PATHS;

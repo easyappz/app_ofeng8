@@ -1,11 +1,11 @@
 import instance from './axios';
 
-export const createIntent = async ({ orderId }) => {
-  const res = await instance.post('/api/payments/create-intent', { orderId });
-  return res.data;
-};
+export async function createIntent(orderId) {
+  const { data } = await instance.post('/api/payments/create-intent', { orderId });
+  return data;
+}
 
-export const confirmPayment = async ({ orderId, clientSecret }) => {
-  const res = await instance.post('/api/payments/confirm', { orderId, clientSecret });
-  return res.data;
-};
+export async function confirmPayment(orderId, clientSecret) {
+  const { data } = await instance.post('/api/payments/confirm', { orderId, clientSecret });
+  return data;
+}

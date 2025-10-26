@@ -1,26 +1,26 @@
 import instance from './axios';
 
-export const getCart = async () => {
-  const res = await instance.get('/api/cart');
-  return res.data;
-};
+export async function getCart() {
+  const { data } = await instance.get('/api/cart');
+  return data;
+}
 
-export const addToCart = async ({ productId, qty }) => {
-  const res = await instance.post('/api/cart', { productId, qty });
-  return res.data;
-};
+export async function addToCart(productId, qty) {
+  const { data } = await instance.post('/api/cart', { productId, qty });
+  return data;
+}
 
-export const updateCartItem = async (productId, { qty }) => {
-  const res = await instance.put(`/api/cart/${productId}`, { qty });
-  return res.data;
-};
+export async function updateCartItem(productId, qty) {
+  const { data } = await instance.put(`/api/cart/${productId}`, { qty });
+  return data;
+}
 
-export const removeCartItem = async (productId) => {
-  const res = await instance.delete(`/api/cart/${productId}`);
-  return res.data;
-};
+export async function removeCartItem(productId) {
+  const { data } = await instance.delete(`/api/cart/${productId}`);
+  return data;
+}
 
-export const clearCart = async () => {
-  const res = await instance.delete('/api/cart');
-  return res.data;
-};
+export async function clearCart() {
+  const { data } = await instance.delete('/api/cart');
+  return data;
+}

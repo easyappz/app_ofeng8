@@ -1,6 +1,6 @@
 import instance from './axios';
 
-export const getDashboard = async () => {
-  const res = await instance.get('/api/admin/dashboard');
-  return res.data;
-};
+export async function getDashboard() {
+  const { data } = await instance.get('/api/admin/dashboard');
+  return data;
+}

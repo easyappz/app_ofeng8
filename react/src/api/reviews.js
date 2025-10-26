@@ -1,11 +1,11 @@
 import instance from './axios';
 
-export const getReviews = async (productId) => {
-  const res = await instance.get(`/api/products/${productId}/reviews`);
-  return res.data;
-};
+export async function getReviews(productId) {
+  const { data } = await instance.get(`/api/products/${productId}/reviews`);
+  return data;
+}
 
-export const addReview = async (productId, data) => {
-  const res = await instance.post(`/api/products/${productId}/reviews`, data);
-  return res.data;
-};
+export async function addReview(productId, payload) {
+  const { data } = await instance.post(`/api/products/${productId}/reviews`, payload);
+  return data;
+}
