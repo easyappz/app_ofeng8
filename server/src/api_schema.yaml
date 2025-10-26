@@ -1,152 +1,476 @@
-service: easyappz-backend
-version: 1.0.0
-basePath: /api
+openapi: 3.0.0
+info:
+  title: Easyappz Shop API
+  version: 1.0.0
+  description: REST API for products, reviews, cart, orders, payments and admin dashboard
+servers:
+  - url: /api
+paths:
+  /hello:
+    get:
+      summary: Health hello endpoint
+      responses:
+        '200':
+          description: OK
+  /status:
+    get:
+      summary: Service and DB status
+      responses:
+        '200':
+          description: OK
 
-endpoints:
-  - method: GET
-    path: /status
-    description: Healthcheck endpoint with DB connection status
-    request:
-      headers: {}
-      query: {}
-      body: null
-    responses:
-      - status: 200
-        body:
-          status: string
-          timestamp: string
-          db:
-            state: string # one of [disconnected, connected, connecting, disconnecting, uninitialized, unknown]
-        example:
-          status: ok
-          timestamp: 2024-01-01T00:00:00.000Z
-          db:
-            state: connected
+  /auth/register:
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string }
+              required: [name, email, password]
+      responses:
+        '200':
+          description: Registered
+          content:
+            application/json:
+              example:
+                user: { _id: '...', name: 'John', email: 'john@mail.com', role: 'user' }
+                token: 'jwt-token'
+        '4xx': { description: Error }
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+              required: [email, password]
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              example:
+                user: { _id: '...', name: 'John', email: 'john@mail.com', role: 'user' }
+                token: 'jwt-token'
+        '4xx': { description: Error }
+  /auth/me:
+    get:
+      summary: Get current user
+      parameters:
+        - in: header
+          name: Authorization
+          schema: { type: string }
+          example: Bearer <token>
+          required: true
+      responses:
+        '200':
+          description: OK
 
-  - method: GET
-    path: /hello
-    description: Simple hello endpoint (healthcheck)
-    request:
-      headers: {}
-      query: {}
-      body: null
-    responses:
-      - status: 200
-        body:
-          message: string
-        example:
-          message: Hello from API!
+  /products:
+    get:
+      summary: List products with filters and pagination (no regex)
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          description: Case-insensitive exact match against title or description
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: priceMin
+          schema: { type: number }
+        - in: query
+          name: priceMax
+          schema: { type: number }
+        - in: query
+          name: ratingMin
+          schema: { type: number }
+        - in: query
+          name: inStock
+          schema: { type: string }
+          example: '1'
+        - in: query
+          name: sort
+          schema: { type: string, enum: [new, price_asc, price_desc] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                items: []
+                total: 0
+                page: 1
+                pages: 0
+    post:
+      summary: Create product (admin)
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+          example: Bearer <token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                price: { type: number }
+                stock: { type: number }
+                images: { type: array, items: { type: string } }
+                category: { type: string }
+              required: [title, price, stock]
+      responses:
+        '201': { description: Created }
+        '4xx': { description: Error }
+  /products/{id}:
+    get:
+      summary: Get product by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+    put:
+      summary: Update product (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Delete product (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Deleted }
+        '404': { description: Not found }
 
-  - method: POST
-    path: /auth/register
-    description: Register a new user. Returns JWT token and user profile.
-    request:
-      headers:
-        Content-Type: application/json
-      body:
-        name: string (optional)
-        email: string (required)
-        password: string (required)
-        phone: string (optional)
-        address: object (optional)
-      example:
-        name: John Doe
-        email: john@example.com
-        password: strong_password
-        phone: "+1234567890"
-        address:
-          line1: "Street 1"
-          city: "City"
-          postalCode: "12345"
-          country: "US"
-    responses:
-      - status: 201
-        body:
-          token: string
-          user:
-            id: string
-            name: string
-            email: string
-            role: string
-            phone: string
-            address: object
-            createdAt: string
-        example:
-          token: "<jwt>"
-          user:
-            id: "65f0..."
-            name: John Doe
-            email: john@example.com
-            role: user
-            phone: "+1234567890"
-            address:
-              line1: "Street 1"
-              city: "City"
-              postalCode: "12345"
-              country: "US"
-            createdAt: 2024-01-01T00:00:00.000Z
-      - status: 409
-        body:
-          error:
-            message: string
-            details: object
+  /products/{id}/reviews:
+    get:
+      summary: Get reviews for product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Add review (auth, one per user per product)
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating: { type: number, minimum: 1, maximum: 5 }
+                comment: { type: string }
+              required: [rating]
+      responses:
+        '201': { description: Created }
+        '4xx': { description: Error }
 
-  - method: POST
-    path: /auth/login
-    description: Login with email and password. Returns JWT token and user profile.
-    request:
-      headers:
-        Content-Type: application/json
-      body:
-        email: string (required)
-        password: string (required)
-      example:
-        email: john@example.com
-        password: strong_password
-    responses:
-      - status: 200
-        body:
-          token: string
-          user:
-            id: string
-            name: string
-            email: string
-            role: string
-            phone: string
-            address: object
-            createdAt: string
-      - status: 401
-        body:
-          error:
-            message: string
-            details: object
+  /cart:
+    get:
+      summary: Get current user's cart
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Add item to cart
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId: { type: string }
+                qty: { type: integer, minimum: 1 }
+              required: [productId, qty]
+      responses:
+        '201': { description: Added }
+    delete:
+      summary: Clear cart
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Cleared }
+  /cart/{productId}:
+    put:
+      summary: Update item qty
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: productId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qty: { type: integer, minimum: 1 }
+              required: [qty]
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Remove item from cart
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: productId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Removed }
 
-  - method: GET
-    path: /auth/me
-    description: Get current user profile. Requires Authorization header with Bearer token.
-    request:
-      headers:
-        Authorization: "Bearer <token>"
-      query: {}
-      body: null
-    responses:
-      - status: 200
-        body:
-          user:
-            id: string
-            name: string
-            email: string
-            role: string
-            phone: string
-            address: object
-            createdAt: string
-      - status: 401
-        body:
-          error:
-            message: string
-            details: object
+  /orders:
+    post:
+      summary: Create order from current cart
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delivery: { type: object, properties: { method: { type: string }, address: { type: string } } }
+                payment: { type: object, properties: { method: { type: string } } }
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              example:
+                order: { _id: '...', status: 'created', total: 100 }
+                notifications: [ { type: 'order_created', message: 'Order has been created', timestamp: '...' } ]
+    get:
+      summary: List orders (user's orders; admin can pass all=1 to list all)
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: query
+          name: all
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /orders/{id}:
+    get:
+      summary: Get order by id (owner or admin)
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+  /orders/{id}/status:
+    patch:
+      summary: Update order status (admin)
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [created, paid, shipped, completed, cancelled] }
+              required: [status]
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              example:
+                order: { _id: '...', status: 'shipped' }
+                notifications: [ { type: 'status_changed', message: 'Order status changed to shipped', timestamp: '...' } ]
+  /orders/{id}/notify:
+    post:
+      summary: Create admin notification for order
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+      responses:
+        '200': { description: Notified }
 
-notes:
-  - Mongo connection: mongoose.connect(process.env.MONGO_URI)
-  - JWT is provided only via Authorization header (Bearer token). No cookies are used.
-  - Cart is stored as a separate collection (Cart model) with unique user reference.
+  /payments/create-intent:
+    post:
+      summary: Create mock payment intent
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId: { type: string }
+              required: [orderId]
+      responses:
+        '200':
+          description: Client secret
+          content:
+            application/json:
+              example:
+                clientSecret: mock_pay_<orderId>_<random>
+                mock: true
+  /payments/confirm:
+    post:
+      summary: Confirm mock payment
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId: { type: string }
+                clientSecret: { type: string }
+              required: [orderId, clientSecret]
+      responses:
+        '200':
+          description: Paid
+          content:
+            application/json:
+              example:
+                order: { _id: '...', status: 'paid', payment: { status: 'succeeded' } }
+                notifications: [ { type: 'payment_succeeded', message: 'Payment confirmed. Order is paid.', timestamp: '...' } ]
+
+  /admin/dashboard:
+    get:
+      summary: Admin dashboard
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                usersCount: 10
+                productsCount: 20
+                ordersCount: 5
+                salesTotal: 1234.56

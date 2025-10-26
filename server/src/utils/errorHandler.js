@@ -1,14 +1,12 @@
-function formatError(err, extra = {}) {
+function formatError(err) {
   return {
     error: {
-      message: err && err.message ? err.message : 'Unknown error',
-      name: err && err.name ? err.name : 'Error',
+      message: err?.message || 'Internal server error',
       details: {
-        ...extra,
-        ...(err && err.errors ? { errors: err.errors } : {}),
-        stack: err && err.stack ? err.stack : undefined
-      }
-    }
+        name: err?.name || 'Error',
+        stack: err?.stack || null,
+      },
+    },
   };
 }
 

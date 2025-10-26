@@ -2,6 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const authRoutes = require('@src/routes/auth');
+const productRoutes = require('@src/routes/products');
+const cartRoutes = require('@src/routes/cart');
+const orderRoutes = require('@src/routes/orders');
+const paymentRoutes = require('@src/routes/payments');
+const adminRoutes = require('@src/routes/admin');
 
 const router = express.Router();
 
@@ -40,5 +45,10 @@ router.get('/status', async (req, res) => {
 
 // Sub-routes
 router.use('/auth', authRoutes);
+router.use('/products', productRoutes);
+router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;
