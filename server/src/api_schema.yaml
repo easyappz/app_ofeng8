@@ -1,0 +1,152 @@
+service: easyappz-backend
+version: 1.0.0
+basePath: /api
+
+endpoints:
+  - method: GET
+    path: /status
+    description: Healthcheck endpoint with DB connection status
+    request:
+      headers: {}
+      query: {}
+      body: null
+    responses:
+      - status: 200
+        body:
+          status: string
+          timestamp: string
+          db:
+            state: string # one of [disconnected, connected, connecting, disconnecting, uninitialized, unknown]
+        example:
+          status: ok
+          timestamp: 2024-01-01T00:00:00.000Z
+          db:
+            state: connected
+
+  - method: GET
+    path: /hello
+    description: Simple hello endpoint (healthcheck)
+    request:
+      headers: {}
+      query: {}
+      body: null
+    responses:
+      - status: 200
+        body:
+          message: string
+        example:
+          message: Hello from API!
+
+  - method: POST
+    path: /auth/register
+    description: Register a new user. Returns JWT token and user profile.
+    request:
+      headers:
+        Content-Type: application/json
+      body:
+        name: string (optional)
+        email: string (required)
+        password: string (required)
+        phone: string (optional)
+        address: object (optional)
+      example:
+        name: John Doe
+        email: john@example.com
+        password: strong_password
+        phone: "+1234567890"
+        address:
+          line1: "Street 1"
+          city: "City"
+          postalCode: "12345"
+          country: "US"
+    responses:
+      - status: 201
+        body:
+          token: string
+          user:
+            id: string
+            name: string
+            email: string
+            role: string
+            phone: string
+            address: object
+            createdAt: string
+        example:
+          token: "<jwt>"
+          user:
+            id: "65f0..."
+            name: John Doe
+            email: john@example.com
+            role: user
+            phone: "+1234567890"
+            address:
+              line1: "Street 1"
+              city: "City"
+              postalCode: "12345"
+              country: "US"
+            createdAt: 2024-01-01T00:00:00.000Z
+      - status: 409
+        body:
+          error:
+            message: string
+            details: object
+
+  - method: POST
+    path: /auth/login
+    description: Login with email and password. Returns JWT token and user profile.
+    request:
+      headers:
+        Content-Type: application/json
+      body:
+        email: string (required)
+        password: string (required)
+      example:
+        email: john@example.com
+        password: strong_password
+    responses:
+      - status: 200
+        body:
+          token: string
+          user:
+            id: string
+            name: string
+            email: string
+            role: string
+            phone: string
+            address: object
+            createdAt: string
+      - status: 401
+        body:
+          error:
+            message: string
+            details: object
+
+  - method: GET
+    path: /auth/me
+    description: Get current user profile. Requires Authorization header with Bearer token.
+    request:
+      headers:
+        Authorization: "Bearer <token>"
+      query: {}
+      body: null
+    responses:
+      - status: 200
+        body:
+          user:
+            id: string
+            name: string
+            email: string
+            role: string
+            phone: string
+            address: object
+            createdAt: string
+      - status: 401
+        body:
+          error:
+            message: string
+            details: object
+
+notes:
+  - Mongo connection: mongoose.connect(process.env.MONGO_URI)
+  - JWT is provided only via Authorization header (Bearer token). No cookies are used.
+  - Cart is stored as a separate collection (Cart model) with unique user reference.
